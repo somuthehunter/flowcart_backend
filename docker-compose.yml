@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  flowcart-postgres:
+    image: postgres:15-alpine
+    container_name: flowcart-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: flowcart
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d flowcart"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  flowcart-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flowcart-backend
+    restart: always
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_HOST: flowcart-postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: postgrespassword
+      DATABASE_DB: flowcart
+      JWT_SECRET: supersecretjwtkey123!@#
+      JWT_REFRESH_SECRET: supersecretrefreshjwtkey123!@#
+    depends_on:
+      flowcart-postgres:
+        condition: service_healthy
+    volumes:
+      - ./logs:/usr/src/app/logs
+
+volumes:
+  postgres-data:
