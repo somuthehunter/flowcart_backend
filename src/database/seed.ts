@@ -9,6 +9,8 @@ import { Category } from '../modules/categories/category.entity';
 import { Product } from '../modules/products/product.entity';
 import { Bill } from '../modules/bills/bill.entity';
 import { BillItem } from '../modules/bills/bill-item.entity';
+import { Brand } from '../modules/brands/brand.entity';
+import { ProductBrand } from '../modules/products/product-brand.entity';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
@@ -20,7 +22,7 @@ const dataSource = new DataSource({
   username: process.env.DATABASE_USER || 'postgres',
   password: process.env.DATABASE_PASSWORD || 'postgrespassword',
   database: process.env.DATABASE_DB || 'flowcart',
-  entities: [Merchant, User, RefreshToken, Category, Product, Bill, BillItem],
+  entities: [Merchant, User, RefreshToken, Category, Product, Bill, BillItem, Brand, ProductBrand],
   synchronize: true, // Make sure schema exists
 });
 
@@ -76,6 +78,27 @@ async function runSeed() {
       await userRepo.save(user);
       console.log('Merchant created successfully.');
     }
+
+    // Seed admin.merchant@gmail.com user
+    const adminEmail = 'admin.merchant@gmail.com';
+    let adminUser = await userRepo.findOne({ where: { email: adminEmail } });
+    if (!adminUser) {
+      console.log(`Creating user: ${adminEmail}`);
+      const adminPassword = await bcrypt.hash('strong-password', 10);
+      adminUser = userRepo.create({
+        email: adminEmail,
+        password: adminPassword,
+        role: UserRole.MerchantOwner,
+        merchant_id: merchant.id,
+        created_by: merchant.id,
+        updated_by: merchant.id,
+      });
+      await userRepo.save(adminUser);
+      console.log(`User ${adminEmail} created successfully.`);
+    } else {
+      console.log(`User ${adminEmail} already exists. Skipping.`);
+    }
+
 
     // 2. Seed Categories
     const categoryRepo = dataSource.getRepository(Category);
