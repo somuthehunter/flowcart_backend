@@ -63,11 +63,18 @@ export class CreateProductDto {
   @IsString()
   unit?: string = 'KG';
 
-  @ApiProperty({ type: [CreateProductBrandDto], description: 'List of brands for this product' })
+  @ApiPropertyOptional({ example: 65.00, description: 'Base price of the product without any brand variations' })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  base_price?: number | null;
+
+  @ApiProperty({ type: [CreateProductBrandDto], description: 'List of brands for this product', required: false })
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateProductBrandDto)
-  brands: CreateProductBrandDto[];
+  brands?: CreateProductBrandDto[] = [];
 
   @ApiPropertyOptional({ example: true, default: false, description: 'Whether to track stock inventory' })
   @IsOptional()

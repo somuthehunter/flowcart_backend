@@ -17,10 +17,10 @@ export class CreateBillItemDto {
   @IsUUID()
   product_id: string;
 
-  @ApiProperty({ example: '87486e0c-d55e-4efb-8664-df8f5f6b2222', description: 'Brand UUID' })
-  @IsNotEmpty()
+  @ApiPropertyOptional({ example: '87486e0c-d55e-4efb-8664-df8f5f6b2222', description: 'Brand UUID' })
+  @IsOptional()
   @IsUUID()
-  brand_id: string;
+  brand_id?: string;
 
   @ApiProperty({ example: 2.5, description: 'Quantity purchased (supports decimals for weight-based units)' })
   @IsNotEmpty()

@@ -37,9 +37,21 @@ export class BillService {
           throw new NotFoundException(`Product with ID ${itemDto.product_id} not found.`);
         }
 
-        const productBrand = product.brands?.find(b => b.brand_id === itemDto.brand_id);
-        if (!productBrand) {
-          throw new BadRequestException(`Brand with ID ${itemDto.brand_id} not found for product "${product.english_name}".`);
+        let unitPrice: number;
+        let brandName: string | null = null;
+
+        if (itemDto.brand_id) {
+          const productBrand = product.brands?.find(b => b.brand_id === itemDto.brand_id);
+          if (!productBrand) {
+            throw new BadRequestException(`Brand with ID ${itemDto.brand_id} not found for product "${product.english_name}".`);
+          }
+          unitPrice = Number(productBrand.selling_price);
+          brandName = productBrand.brand.name;
+        } else {
+          if (product.base_price === null || product.base_price === undefined) {
+             throw new BadRequestException(`Product "${product.english_name}" has no base price and no brand was selected.`);
+          }
+          unitPrice = Number(product.base_price);
         }
 
         // Deduct stock if stock tracking is enabled
@@ -68,15 +80,15 @@ export class BillService {
           ledgerEntries.push(ledgerEntry);
         }
 
-        const subtotal = Number(productBrand.selling_price) * itemDto.quantity;
+        const subtotal = unitPrice * itemDto.quantity;
         totalAmount += subtotal;
 
         const billItem = new BillItem();
         billItem.product_id = product.id;
-        billItem.brand_id = productBrand.brand_id;
-        billItem.brand_name = productBrand.brand.name;
+        billItem.brand_id = itemDto.brand_id || null;
+        billItem.brand_name = brandName;
         billItem.quantity = itemDto.quantity;
-        billItem.unit_price = Number(productBrand.selling_price);
+        billItem.unit_price = unitPrice;
         billItem.subtotal = subtotal;
         billItem.created_by = merchantId;
         billItem.updated_by = merchantId;

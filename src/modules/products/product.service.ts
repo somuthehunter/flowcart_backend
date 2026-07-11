@@ -32,10 +32,8 @@ export class ProductService {
       const transactionalBrandRepo = manager.getRepository(Brand);
       const transactionalProductBrandRepo = manager.getRepository(ProductBrand);
 
-      // Validate at least one brand is provided
-      if (!dto.brands || dto.brands.length === 0) {
-        throw new BadRequestException('At least one brand must be provided.');
-      }
+      // Brands are optional, a product can be created without sub-products or brands
+      const brandsToProcess = dto.brands || [];
 
       // 1. Verify Category exists and belongs to Merchant
       if (dto.category_id) {
@@ -84,6 +82,7 @@ export class ProductService {
         bengali_name: dto.bengali_name,
         description: dto.description,
         unit: dto.unit || 'KG',
+        base_price: dto.base_price ?? null,
         track_stock: dto.track_stock ?? false,
         current_stock: dto.current_stock ?? 0,
         minimum_stock: dto.minimum_stock ?? 0,
@@ -100,7 +99,7 @@ export class ProductService {
       const savedProduct = await transactionalProductRepo.save(product);
 
       // 6. Handle Brands
-      for (const bDto of dto.brands) {
+      for (const bDto of brandsToProcess) {
         const trimmedName = bDto.brand_name.trim();
         let brand = await transactionalBrandRepo.findOne({
           where: { name: trimmedName, merchant_id: merchantId }
@@ -129,7 +128,11 @@ export class ProductService {
         await transactionalProductBrandRepo.save(productBrand);
       }
 
-      return this.findOne(savedProduct.id, merchantId);
+      const productWithRelations = await transactionalProductRepo.findOne({
+        where: { id: savedProduct.id, merchant_id: merchantId },
+        relations: { category: true, brands: { brand: true } },
+      });
+      return productWithRelations!;
     });
   }
 
@@ -168,7 +171,14 @@ export class ProductService {
     return this.dataSource.transaction(async (manager) => {
       const transactionalProductRepo = manager.getRepository(Product);
       
-      const product = await this.findOne(id, merchantId);
+      const product = await transactionalProductRepo.findOne({
+        where: { id, merchant_id: merchantId },
+        relations: { category: true, brands: { brand: true } },
+      });
+      
+      if (!product || product.deleted_at) {
+        throw new NotFoundException('Product not found.');
+      }
 
       // Verify Category if changed
       if (dto.category_id) {
@@ -188,6 +198,7 @@ export class ProductService {
       if (dto.bengali_name !== undefined) product.bengali_name = dto.bengali_name;
       if (dto.description !== undefined) product.description = dto.description;
       if (dto.unit !== undefined) product.unit = dto.unit;
+      if (dto.base_price !== undefined) product.base_price = dto.base_price;
       if (dto.track_stock !== undefined) product.track_stock = dto.track_stock;
       if (dto.current_stock !== undefined) product.current_stock = dto.current_stock;
       if (dto.minimum_stock !== undefined) product.minimum_stock = dto.minimum_stock;
@@ -197,7 +208,7 @@ export class ProductService {
       await transactionalProductRepo.save(product);
 
       // Handle Brands Update if provided
-      if (dto.brands && dto.brands.length > 0) {
+      if (dto.brands !== undefined) {
         const transactionalBrandRepo = manager.getRepository(Brand);
         const transactionalProductBrandRepo = manager.getRepository(ProductBrand);
         
@@ -234,7 +245,11 @@ export class ProductService {
         }
       }
 
-      return this.findOne(product.id, merchantId);
+      const productWithRelations = await transactionalProductRepo.findOne({
+        where: { id: product.id, merchant_id: merchantId },
+        relations: { category: true, brands: { brand: true } },
+      });
+      return productWithRelations!;
     });
   }
 

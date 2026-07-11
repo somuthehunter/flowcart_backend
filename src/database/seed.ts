@@ -79,24 +79,24 @@ async function runSeed() {
       console.log('Merchant created successfully.');
     }
 
-    // Seed admin.merchant@gmail.com user
-    const adminEmail = 'admin.merchant@gmail.com';
-    let adminUser = await userRepo.findOne({ where: { email: adminEmail } });
-    if (!adminUser) {
-      console.log(`Creating user: ${adminEmail}`);
-      const adminPassword = await bcrypt.hash('strong-password', 10);
-      adminUser = userRepo.create({
-        email: adminEmail,
-        password: adminPassword,
+    // Seed merchant.user@gmail.com user
+    const customEmail = 'merchant.user@gmail.com';
+    let customUser = await userRepo.findOne({ where: { email: customEmail } });
+    if (!customUser) {
+      console.log(`Creating user: ${customEmail}`);
+      const customPassword = await bcrypt.hash('password', 10);
+      customUser = userRepo.create({
+        email: customEmail,
+        password: customPassword,
         role: UserRole.MerchantOwner,
         merchant_id: merchant.id,
         created_by: merchant.id,
         updated_by: merchant.id,
       });
-      await userRepo.save(adminUser);
-      console.log(`User ${adminEmail} created successfully.`);
+      await userRepo.save(customUser);
+      console.log(`User ${customEmail} created successfully.`);
     } else {
-      console.log(`User ${adminEmail} already exists. Skipping.`);
+      console.log(`User ${customEmail} already exists. Skipping.`);
     }
 
 
