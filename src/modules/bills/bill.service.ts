@@ -130,7 +130,7 @@ export class BillService {
       bill.invoice_number = invoiceNumber;
       bill.customer_name = dto.customer_name || null;
       bill.customer_mobile = dto.customer_mobile || null;
-      bill.payment_status = 'PAID';
+      bill.payment_status = dto.payment_status || 'PENDING';
       bill.total_amount = totalAmount;
       bill.tax_amount = taxAmount;
       bill.discount_amount = discountAmount;

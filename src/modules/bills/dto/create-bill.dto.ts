@@ -58,4 +58,9 @@ export class CreateBillDto {
   @IsNumber()
   @Min(0)
   discount_amount?: number = 0;
+
+  @ApiPropertyOptional({ example: 'PAID', description: 'Status of the payment' })
+  @IsOptional()
+  @IsString()
+  payment_status?: string;
 }

@@ -25,7 +25,7 @@ export class Bill extends BaseEntity {
   @Column({ type: 'varchar', name: 'customer_mobile', nullable: true })
   customer_mobile: string | null;
 
-  @Column({ type: 'varchar', name: 'payment_status', default: 'PAID' })
+  @Column({ type: 'varchar', name: 'payment_status', default: 'PENDING' })
   payment_status: string;
 
   @Column({ type: 'decimal', precision: 12, scale: 2, name: 'total_amount' })

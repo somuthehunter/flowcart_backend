@@ -56,7 +56,7 @@ export class Product extends BaseEntity {
   @Column({ type: 'text', name: 'qr_code_image_url', nullable: true })
   qr_code_image_url: string | null;
 
-  @Column({ type: 'varchar', name: 'image_url', nullable: true })
+  @Column({ type: 'text', name: 'image_url', nullable: true })
   image_url: string | null;
 
   @Column({ type: 'decimal', precision: 12, scale: 2, name: 'base_price', nullable: true })
